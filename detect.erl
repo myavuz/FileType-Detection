@@ -5,8 +5,8 @@
 
 getType(FileName) 		->	detect ( file:open(FileName,[read,binary]), file:open("magic",[read,binary])).
 							
-detect({error,_},_)					->	"File does not exist.";
-detect(_,{error,_})					->	"MagicFile does not exist.";
+detect({error,_},_)			->	"File does not exist.";
+detect(_,{error,_})			->	"MagicFile does not exist.";
 detect({ok,IoFile},{ok,IoMagic})	->	FileData   = file:read(IoFile , ?MAX_BYTES_TO_READ),
 										file:close(IoFile),
 										MagicList = parse_all_lines(IoMagic, []),
@@ -26,8 +26,8 @@ parse_all_lines(Device, Accum) ->
 isDecDigit(Char)	-> 	(Char >= $0) and (Char =< $9).
 isOctDigit(Char)	-> 	(Char >= $0) and (Char =< $7).
 isHexDigit(Char)	->	(Char >= $0) and (Char =< $9) or   
-						(Char >= $a) and (Char =< $f) or 
-						(Char >= $A) and (Char =< $F).
+				(Char >= $a) and (Char =< $f) or 
+				(Char >= $A) and (Char =< $F).
 
 
 
@@ -52,8 +52,8 @@ dec2int(Hex) ->
 
 %This function converts hex,oct or dec (e.g. 0xaef32 , 01242 , 3563) to decimal.
 hdo2int(<<$0 , $x, T/binary>>)	-> hex2int(T);
-hdo2int(<<$0 , T/binary>>	 )	-> oct2int(T);
-hdo2int(T)						-> dec2int(T).
+hdo2int(<<$0 , T/binary>>    )	-> oct2int(T);
+hdo2int(T)			-> dec2int(T).
 
 
 parse(<<$>	,_/binary>>)	->	[]; % gecici olarak duruyor silinecek.
@@ -63,14 +63,14 @@ parse({{_,false},_,_,_})	->	[];
 parse({_,{_,false},_,_})	->	[];		
 parse({_,_,{_,false},_})	->	[];	
 parse({{Offset,true},{Type,true},{Data,true},Result})	->	[edit({Offset,Type,Data,Result})];	
-parse(Binary)				->	 {Offset,ExOffset} = getOffset(Binary,  <<>>)  ,%essential line parsing start
-								 {Type  ,ExType}   = getType(ExOffset,  <<>>)  , 
-								 {Data  ,ExData}   = getData(ExType  ,  <<>>)  ,
-										 Result    = getResult(ExData)  	   ,
-								 parse({	{Offset,isValidOffset(Offset)	},
-								 			{Type  ,isValidType(Type,<<>>)	},
-								 			{Data  ,isValidData(Type,Data)	},
-								 			Result							    }).
+parse(Binary)		        ->	{Offset,ExOffset} = getOffset(Binary,  <<>>)  ,%essential line parsing start
+					{Type  ,ExType}   = getType(ExOffset,  <<>>)  , 
+					{Data  ,ExData}   = getData(ExType  ,  <<>>)  ,
+					 Result    = getResult(ExData)  	      ,
+				         parse({	{Offset,isValidOffset(Offset)	},
+							{Type  ,isValidType(Type,<<>>)	},
+							{Data  ,isValidData(Type,Data)	},
+						        Result				}  ).
 								 
 
 
@@ -81,10 +81,10 @@ getOffset(<<$\t, T/binary>> ,Offset)	-> {Offset,T};
 getOffset(<<Char,T/binary>> ,Offset)	-> getOffset(T,<<Offset/binary,<<Char>>/binary>>).
 
 
-isValidOffset(<<>> )	->	false;
+isValidOffset(<<>> )	                ->	false;
 isValidOffset(<<$> ,T/binary >> )	->	isValidOffset(T);
 isValidOffset(<<$0,$x,T/binary >> )	->	isHex(T);
-isValidOffset(T)					-> 	isDec(T).
+isValidOffset(T)			-> 	isDec(T).
 
 
 
@@ -100,16 +100,16 @@ getType(<<Char,T/binary>>,Type)		-> getType(T,<<Type/binary,Char>>).
 
 
 
-isValidType(<<>>,<<>>)						->	false;
-isValidType(<<>>,Type)						->	isValidType(Type);
+isValidType(<<>>,<<>>)				->	false;
+isValidType(<<>>,Type)				->	isValidType(Type);
 isValidType(<<$&,$0,$x,T/binary>>,Type)		->	isHex(T) 		and isValidType(Type);
-isValidType(<<$&,T/binary>>,Type)			->	isDec(T)		and isValidType(Type);
+isValidType(<<$&,T/binary>>,Type)		->	isDec(T)		and isValidType(Type);
 isValidType(<<$/,T/binary>>,<<"string">>)	->	isValidstr(T); 
-isValidType(<<Char,T/binary>>,Type)			->	isValidType(T, <<Type/binary,Char>>).	
+isValidType(<<Char,T/binary>>,Type)		->	isValidType(T, <<Type/binary,Char>>).	
 
-isValidType(Type)		when	Type == <<"short">> ; Type == <<"beshort">> ;  Type == <<"leshort">> ;
-								Type == <<"long">> 	; Type == <<"belong">>  ;  Type == <<"lelong">>  ;
-								Type == <<"byte">>	; Type == <<"string">>	 							->	true;
+isValidType(Type)	when	Type == <<"short">> ; Type == <<"beshort">> ;  Type == <<"leshort">> ;
+				Type == <<"long">>  ; Type == <<"belong">>  ;  Type == <<"lelong">>  ;
+				Type == <<"byte">>  ; Type == <<"string">>	 		       ->	true;
 isValidType(_)		->	false.
 
 %tests for "/[Bbc]*" part of string/[Bbc]* 
@@ -120,29 +120,29 @@ isValidstr(<<Char, T/binary>>)		when Char==$b ;  Char==$B ;	Char==$c 	->	isValid
 isValidstr(_)	->	false.					
 
 
-getData(<<$\s,T/binary>>,<<>>)	->	getData(T,<<>>);	
-getData(<<$\t,T/binary>>,<<>>)	->	getData(T,<<>>);	
-getData(<<>> ,Data)					-> {Data,<<>>};
+getData(<<$\s,T/binary>>,<<>>)	        -> getData(T,<<>>);	
+getData(<<$\t,T/binary>>,<<>>)	        -> getData(T,<<>>);	
+getData(<<>> ,Data)		        -> {Data,<<>>};
 getData(<<$\n, T/binary>> ,Data)	-> {Data,T};
 getData(<<$\s, T/binary>> ,Data)	-> {Data,T};
 getData(<<$\t, T/binary>> ,Data)	-> {Data,T};
-getData(<<$\\,$\s,T/binary>>,Data)	->		getData(T,<<Data/binary,<<$\s>>/binary>>);
-getData(<<Char,T/binary>>,Data)		->		getData(T,<<Data/binary,<<Char>>/binary>>).
+getData(<<$\\,$\s,T/binary>>,Data)	-> getData(T,<<Data/binary,<<$\s>>/binary>>);
+getData(<<Char,T/binary>>,Data)		-> getData(T,<<Data/binary,<<Char>>/binary>>).
 
 
 
-isValidData(Type,Data)	-> isValidData(Type,Data,isValidType(Type,<<>>)).
-isValidData(_,_,false)						->	false;
+isValidData(Type,Data)	                        -> isValidData(Type,Data,isValidType(Type,<<>>)).
+isValidData(_,_,false)				->	false;
 isValidData(<<"string",_/binary >>,_,true)	->	true;
 isValidData(_,<<$0,$x,T/binary>>,true)		-> 	isHex(T);
-isValidData(_,Data,true)					->  isDec(Data).
+isValidData(_,Data,true)		        ->      isDec(Data).
 
 
 
 
 getResult(<<$\s , T/binary>>)	->	getResult(T);
 getResult(<<$\t , T/binary>>)	->	getResult(T);
-getResult(T)					->	T.
+getResult(T)			->	T.
 
 
 
@@ -152,16 +152,16 @@ edit({Offset,Type,Data,Result})	->	{ editOffset(Offset), editType(Type), editDat
 editOffset(<<"0">>)				->	0;
 editOffset(<<"0x" ,T/binary>>)	->	hex2int(T);
 editOffset(<<"0"  ,T/binary>>)	->	oct2int(T);
-editOffset(T)					->	dec2int(T).
+editOffset(T)		        ->	dec2int(T).
 
 
 editResult(<<"\\b",T/binary>>)	->	T;
-editResult(Result)				->	Result.
+editResult(Result)	        ->	Result.
 
 
 -define(STRING,<<"string",_/binary>>).
 
-editData(?STRING, <<>>)	  				->	<<>> ;
+editData(?STRING, <<>>)	  			->	<<>> ;
 editData(?STRING, <<"\\a",   T/binary>>)	->	<< 7   , (editData(<<"string">>,T))/binary >> ; %Special chars from ascii e.g. \a,\n...
 editData(?STRING, <<"\\b",   T/binary>>)	->	<< $\b , (editData(<<"string">>,T))/binary >> ;
 editData(?STRING, <<"\\t",   T/binary>>)	->	<< $\t , (editData(<<"string">>,T))/binary >> ;
@@ -195,15 +195,18 @@ editData1(false ,_   ,  Digits     ,   T )		->	<< $x ,(editData(<<"string">>,<<D
 
 %Conversions in octal is similar to conversions in hexadecimal e.g. "\10z" -> [8,$z]... 
 %After conversion if integer overflows byte, binary type automatically takes mod of number.e.g "\401" yields [1].
-editData2(<<Fst>>)	    		->		<<(Fst-$0)>>;
-editData2(<<Fst,Snd>>)			->		editData2({isOctDigit(Snd), <<Fst,Snd>> });
-editData2({true ,Digits})		->	 	<< (oct2int(Digits)) >>;
-editData2({false,<<Fst,Snd>> })	->	 	<< (Fst-$0),Snd>> ;
+editData2(<<Fst>>)	    		->	<<(Fst-$0)>>;
+editData2(<<Fst,Snd>>)			->	editData2({isOctDigit(Snd), <<Fst,Snd>> });
+editData2({true ,Digits})		->	<< (oct2int(Digits)) >>;
+editData2({false,<<Fst,Snd>> })	        ->	<< (Fst-$0),Snd>> ;
 editData2(<<Fst,Snd,Thrd,T/binary >>) 	->	editData2(isOctDigit(Snd),isOctDigit(Thrd) , <<Fst,Snd,Thrd>> , T).
 						
-editData2(true, true,   Digits,  			T)	->	<< << (oct2int(Digits)) >> /binary , (editData(<<"string">>,T))/binary >> ;
-editData2(true, false,  <<Fst,Snd,Thrd>>, 	T)	->	<< << (oct2int(<<Fst,Snd>>)) >> /binary ,(editData(<<"string">>,<< Thrd,T/binary>>))/binary >> ;			
-editData2(false ,_,     <<Fst,Snd,Thrd>>,   T)	->	<< (Fst-$0) , (editData(<<"string">>,<<Snd,Thrd,T/binary>>))/binary >> .
+editData2(true, true,   Digits,  T)	        ->	
+            << << (oct2int(Digits)) >> /binary , (editData(<<"string">>,T))/binary >> ;
+editData2(true, false,  <<Fst,Snd,Thrd>>,  T)	->	
+            << << (oct2int(<<Fst,Snd>>)) >> /binary ,(editData(<<"string">>,<< Thrd,T/binary>>))/binary >> ;			
+editData2(false ,_,     <<Fst,Snd,Thrd>>,   T)	->	
+            << (Fst-$0) , (editData(<<"string">>,<<Snd,Thrd,T/binary>>))/binary >> .
 
 
 
@@ -215,24 +218,24 @@ editType( <<"string">>  )                                ->  {string , <<>>  };
 editType( <<"byte"  >>  )                                ->  {byte   , novalue  	,	little	,	1};
 editType( <<"short" >>  )                                ->  {short  , novalue  	,	little	,	2};
 editType( <<"leshort">> )                                ->  {leshort, novalue  	,	little	,	2};
-editType( <<"beshort">> )                                ->  {beshort, novalue  	,	big		,	2};  
+editType( <<"beshort">> )                                ->  {beshort, novalue  	,	big	,	2};  
 editType( <<"long"  >>  )                                ->  {long   , novalue  	,	little	,	4};
 editType( <<"lelong">>  )                                ->  {lelong , novalue  	,	little	,	4};
-editType( <<"belong">>  )                                ->  {belong , novalue  	,	big		,	4}; 
+editType( <<"belong">>  )                                ->  {belong , novalue  	,	big	,	4}; 
 editType( <<"byte"    , $& , T/binary>> )                ->  {byte   , hdo2int(T)  	,	little	,	1};
 editType( <<"short"   , $& , T/binary>> )                ->  {short  , hdo2int(T)  	,	little	,	2};
 editType( <<"leshort" , $& , T/binary>> )                ->  {leshort, hdo2int(T)  	,	little	,	2};
-editType( <<"beshort" , $& , T/binary>> )                ->  {beshort, hdo2int(T)  	,	big		,	2};
+editType( <<"beshort" , $& , T/binary>> )                ->  {beshort, hdo2int(T)  	,	big	,	2};
 editType( <<"long"    , $& , T/binary>> )                ->  {long   , hdo2int(T)  	,	little	,	4};
 editType( <<"lelong"  , $& , T/binary>> )                ->  {lelong , hdo2int(T)  	,	little	,	4};
-editType( <<"belong"  , $& , T/binary>> )                ->  {belong , hdo2int(T)  	,	big		,	4}.
+editType( <<"belong"  , $& , T/binary>> )                ->  {belong , hdo2int(T)  	,	big	,	4}.
 
 
 
 
 %This function returns the bit size of numeric types.
 mybitsize(<<"byte"  	,_/binary>>)	->	8 ;
-mybitsize(<<"short"	 	,_/binary>>)	->	16;
+mybitsize(<<"short"	,_/binary>>)	->	16;
 mybitsize(<<"long"  	,_/binary>>)	->	32;
 mybitsize(<<"leshort" 	,_/binary>>)	->	16;
 mybitsize(<<"lelong"  	,_/binary>>)	->	32;
@@ -257,7 +260,7 @@ readBin(Binary,Offset,Number,native )  ->
 
 
 
-compare(FileData,[])		-> 	"Unknown Type";
+compare(FileData,[])		->  "Unknown Type";
 compare(FileData,[H|T])		->  compare(FileData , T , test(FileData,H)).
 
 compare(_,_,{ok,Result})	->  Result;
@@ -280,7 +283,7 @@ getTarget( Offset, {"string" 	 , []    	}, Data, FileData) 		->	readBin(FileData
 getTarget( Offset, {"string"     , Flag  	}, Data, FileData) 		->	1;
 getTarget( Offset, {NumericTypes , novalue  , Endianness , Size}, _   , FileData) 		->	readBin(FileData,Offset,Size,Endianness);
 getTarget( Offset, {NumericTypes , AndValue , Endianness , Size}, _   , FileData) 		->	readBin(FileData,Offset,Size,Endianness). %will be editted.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% will continue.
 
 
 
