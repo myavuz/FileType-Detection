@@ -5,7 +5,7 @@
 % LANGUAGE PLATFORM: Erlang 5.7.4
 % OS PLATFORM:       Ubuntu 2.6.35-28
 % AUTHOR:            Mustafa Yavuz  &  Ersan V. Zorlu
-% EMAIL:             89.yavuz@gmail.com  & ersanvuralzorlu@gmail.com
+% EMAIL:             89.Yavuz@gmail.com  & ersanvuralzorlu@gmail.com
 %---------------------------------------------------------------------
 -module(detect).
 -compile(export_all).
@@ -204,7 +204,7 @@ isValidstr(<<$B>>)	->	true;
 isValidstr(<<$c>>)	->	true;
 isValidstr(<<$/>>)	->	false;
 isValidstr(<<"//" , _/binary>>)	->	false;
-isValidstr(<<Char, T/binary>>)	when Char==$b ;  Char==$B ;	Char==$c ; Char==$/	->	isValidstr(T);
+isValidstr(<<Char, T/binary>>)	when Char==$b ;  Char==$B ;  Char==$c ; Char==$/	->	isValidstr(T);
 isValidstr(_)	-> false.
 
 
@@ -410,19 +410,19 @@ compare(FileData, Data , error        )         ->  compare(FileData,Data).
 
 
 
-compare1(_ , [] ,  _  , _ , Result)                                 -> Result ;
+compare1(_ , [] ,  _  , _ , Result)                            -> Result ;
 compare1(FileData , ?MYPARSE , _, _ , <<>>) when Level == 0    -> compare(FileData , ?MYPARSE);        
-compare1(_ , [{{_ , 0}, _ , _ , _}|_] ,  _  , _ , Result )      -> Result ;
+compare1(_ , [{{_ , 0}, _ , _ , _}|_] ,  _  , _ , Result )     -> Result ;
 
 compare1( FileData , ?MYPARSE , false  , OldLevel , Result)   when Level < OldLevel + 1   ->
                             compare2( FileData , Tail , Level, Result , test(FileData , hd(?MYPARSE)) );
 
 compare1( FileData , ?MYPARSE , true   , OldLevel , Result)   when Level < OldLevel + 2   ->
                             compare2( FileData , Tail , Level  , Result , test(FileData  , hd(?MYPARSE)));
-compare1( FileData , [_|T]    , Bool       , OldLevel  , Result )   ->  compare1(FileData , T , Bool , OldLevel , Result).
-
-compare2( FileData , Data , OldLevel , Result , {ok , Res} )   ->  compare1(FileData , Data , true , OldLevel , <<Result/binary ,$\s, Res/binary>>);
-compare2( FileData , Data , OldLevel , Result , error      )   ->  compare1(FileData , Data , false , OldLevel , Result).
+                            
+compare1( FileData , [_|T]    , Bool       , OldLevel  , Result )   	->  compare1(FileData , T , Bool , OldLevel , Result).
+compare2( FileData , Data , OldLevel , Result , {ok , Res} )   		->  compare1(FileData , Data , true , OldLevel , <<Result/binary ,$\s, Res/binary>>);
+compare2( FileData , Data , OldLevel , Result , error      )   		->  compare1(FileData , Data , false , OldLevel , Result).
 
 
 
@@ -517,12 +517,14 @@ readString(FileData, Offset,Data,Flags)    ->	Target = readBin(FileData, Offset 
 						readString(Data ,Target,lists:member($b, Flags), lists:member($c, Flags), lists:member($B, Flags)).
 						
 						
-readString(Data, {ok,Target}, true  ,false, _ 	)    ->   {ok,editFlag_b(Target, Data)};
-readString(Data, {ok,Target}, true  ,true , _	)    ->   {ok,editFlag_c(editFlag_b(Target , Data),   Data)};
+readString(Data, {ok,Target}, true  ,false, false)   ->   {ok,editFlag_b(Target, Data)};
+readString(Data, {ok,Target}, true  ,false, true )   ->   {ok,editFlag_B(editFlag_b(Target,  Data),   Data)};
+readString(Data, {ok,Target}, true  ,true , false)   ->   {ok,editFlag_c(editFlag_b(Target , Data),   Data)};
+readString(Data, {ok,Target}, true  ,true , true )   ->   {ok,editFlag_B(editFlag_c(editFlag_b(Target , Data),   Data), Data)};
 readString(Data, {ok,Target}, false ,true , false)   ->   {ok,editFlag_c(Target, Data)};
 readString(Data, {ok,Target}, false ,false, true )   ->   {ok,editFlag_B(Target, Data)};
 readString(Data, {ok,Target}, false ,true , true )   ->   {ok,editFlag_c(editFlag_B(Target , Data),   Data)};
-readString(_   ,{error,Reason},_    ,_    ,_  )      ->   {error,Reason}.
+readString(_   , {error,Reason},_    ,_    ,_    )   ->   {error,Reason}.
 
 
 
@@ -535,41 +537,39 @@ readString(_   ,{error,Reason},_    ,_    ,_  )      ->   {error,Reason}.
 %---------------------------------------------------------------------------------------------------------------		   
 %Edits read string according to rules of Flag 'b'
 %---------------------------------------------------------------------------------------------------------------
-editFlag_b(Target, Data)				   ->  editFlag_b(Target, Data, <<>>).
-editFlag_b(_, <<>>,Stack)                            	   ->  Stack;
-editFlag_b(<<$\s, T/binary>>, <<$\s, T1/binary>>,Stack)    ->  editFlag_b(removeBlanks(T), T1, <<Stack/binary , $\s>>);
-editFlag_b(<<H  , T/binary>>, <<_  , T1/binary>>,Stack)    ->  editFlag_b(T, T1,<<Stack/binary , H>>).
+editFlag_b(_, <<>>)                            	   -> <<>>;
+editFlag_b(<<$\s, T/binary>>, <<$\s, T1/binary>>)  -> <<$\s, (editFlag_b(removeBlanks(T), T1))/binary>>;
+editFlag_b(Target, <<$\s, T1/binary>>)    	   -> <<$\s, (editFlag_b(Target, T1))/binary>>;
+editFlag_b(<<H  , T/binary>>, <<_  , T1/binary>>)  -> <<H  , (editFlag_b(T, T1))/binary>>.
 
+
+
+
+
+%---------------------------------------------------------------------------------------------------------------		   
+%editFlag_c(Target,Data):
+%If a char is lowercase in Data, corresponding char in Target turns into lowecase if it is uppercase in Data it remains same in Target. 
+%---------------------------------------------------------------------------------------------------------------
+editFlag_c(_ , <<>>)                              	-> <<>>;
+editFlag_c(<<H , T/binary >> , <<H1, T1/binary>> )  	 when H1  >= $a  , H1 =< $z ,
+                					      H   >= $A  , H  =< $Z  ->
+                						<<(H bor H1) , (editFlag_c(T,T1))/binary>>;
+editFlag_c(<<H , T/binary >> , <<_ , T1/binary>> )  	-> <<H, (editFlag_c(T,T1))/binary>>. 
+
+
+
+%---------------------------------------------------------------------------------------------------------------		   
+%Edits read string according to rules of Flag 'B' .
+%---------------------------------------------------------------------------------------------------------------
+editFlag_B(_, <<>>)                            	   ->  <<>>;
+editFlag_B(<<>>, _)                            	   ->  <<>>;
+editFlag_B(<<$\s, T/binary>>, <<$\s, T1/binary>>)  ->  <<$\s , (editFlag_B(removeBlanks(T), T1))/binary>>;
+editFlag_B(<<H  , T/binary>>, <<_  , T1/binary>>)  ->  <<H,    (editFlag_B(T, T1))/binary >>.
+
+
+
+%---------------------------------------------------------------------------------------------------------------		   
+%Removes initial blanks.
+%---------------------------------------------------------------------------------------------------------------
 removeBlanks(<<$\s, T/binary>>)	->	removeBlanks(T);
 removeBlanks(Target)	        ->	Target.
-
-
-
-
-
-
-
-
-%---------------------------------------------------------------------------------------------------------------		   
-%Edits read string according to rules of Flag 'c'
-%---------------------------------------------------------------------------------------------------------------
-editFlag_c(Target , Data)            			   ->  editFlag_c(Target, Data, <<>>).
-editFlag_c(_ , <<>> , Stack )                              ->  Stack;
-editFlag_c(<<H , T/binary >> , <<H1, T1/binary>> , Stack)   
-                when     H1  >= $a  , H1 =< $z ,
-                	 H   >= $A  , H  =< $Z             ->  editFlag_c(T, T1 , <<Stack/binary, (H+$a-$A)>>);                                              
-editFlag_c(<<H , T/binary>> , <<_ , T1/binary>> , Stack )  ->  editFlag_c(T, T1 , <<Stack/binary, H>>).
-
-
-
-
-
-
-
-
-%---------------------------------------------------------------------------------------------------------------		   
-%Edits read string according to rules of Flag 'B'
-%---------------------------------------------------------------------------------------------------------------
-editFlag_B(Target , Data)                                   -> editFlag_B(Target , Data , <<>>).
-editFlag_B(_ , <<>> , Target )                              -> Target;
-editFlag_B(<<H , T/binary>> , <<_ , T1/binary>> , Target)   -> editFlag_B(T, T1 , <<Target/binary , H>>).
