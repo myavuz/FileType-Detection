@@ -1,4 +1,11 @@
-detect.erl is a module detects mime types of files using database which includes magic entries.We have used /usr/share/file/magic.mime which Ubuntu 2.6.35 also uses as database. It works in the same way with 'file' command in unix except some little differences. detects.erl parses valid lines in a magic database and uses them to check mime type of a file. While parsing, rules explained in man magic(5) are considered. detect.erl parses lines in a magic file regardless of pure valid syntax of a magic file.It tries to parses valid lines if finds, whereas file command halts process when there is a wrong line in a magic file.(It may will be changed in detect.erl). 
+detect.erl is a module detects mime types of files using database which includes magic entries.
+We have used /usr/share/file/magic.mime which Ubuntu 2.6.35 also uses as database. 
+It works in the same way with 'file' command in unix except some little differences. 
+detects.erl parses valid lines in a magic database and uses them to check mime type of a file. 
+While parsing, rules explained in man magic(5) are considered. 
+detect.erl parses lines in a magic file regardless of pure valid syntax of a magic file.
+It tries to parses valid lines if finds, whereas file command halts process 
+when there is a wrong line in a magic file.(It may will be changed in detect.erl). 
 
 A valid magic line consists of four column which are Offset, Type, Data, Result respectively
 (This four name used as variable name for a magic line).
@@ -17,9 +24,4 @@ Head operators for data like >0x335a , !%PDF- , &0x5e3d8af2 , ^0x5e3d8af2  are i
 Indirect Offsets which are not used in "/usr/share/file/magic.mime" are not implemented.
 
 After parsing a magic line takes form below:
-{ {Offset , TestLevel}  , Type , {HeadOperator , Data} , Result }
 
-
-If Type is string it is in the form  {string , Additional arguments(/B,/b,/bc...)
-If Type is numeric type  it will be  {Type, AndValue, Endiannes , Size of Type}
-AndValue is value after ampersand.For belong&0xfa5e9d2a it is 0xfa5e9d2a. If type has not this part AndValue will be 'novalue' .
